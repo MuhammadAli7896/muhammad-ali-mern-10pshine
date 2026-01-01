@@ -2,6 +2,9 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 
+// Constants
+const RESET_TOKEN_EXPIRY_MS = 10 * 60 * 1000; // 10 minutes
+
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -15,14 +18,14 @@ const userSchema = new mongoose.Schema({
     lowercase: true,
     trim: true,
     match: [
-      /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
       'Please provide a valid email address'
     ],
   },
   password: {
     type: String,
     required: [true, 'Password is required'],
-    minlength: [6, 'Password must be at least 6 characters'],
+    minlength: [8, 'Password must be at least 8 characters'],
     select: false,
   },
   resetPasswordToken: {
@@ -52,16 +55,41 @@ userSchema.pre('save', async function(next) {
   }
 });
 
-// Compare password method
+
+
+/**
+ * Compares a plaintext candidate password with the user's stored hashed password.
+ *
+ * @param {string} candidatePassword - The plaintext password to verify.
+ * @returns {Promise<boolean>} A promise that resolves to true if the passwords match, or false otherwise.
+ * @throws {Error} If an error occurs during password comparison.
+ */
 userSchema.methods.comparePassword = async function(candidatePassword) {
   try {
     return await bcrypt.compare(candidatePassword, this.password);
   } catch (error) {
-    throw new Error(error);
+    throw error;
   }
 };
 
-// Generate password reset token
+/**
+ * Generates a password reset token for the user.
+ *
+ * This method:
+ * - Generates a random reset token.
+ * - Hashes the token and assigns it to `this.resetPasswordToken`.
+ * - Sets `this.resetPasswordExpire` to an expiry time from now.
+ *
+ * IMPORTANT: This method mutates the current document instance but does NOT save it
+ * to the database. You MUST call `await user.save()` after calling this method
+ * to persist the reset token and expiration to the database.
+ *
+ * Example usage:
+ *   const resetToken = user.getResetPasswordToken();
+ *   await user.save({ validateBeforeSave: false });
+ *
+ * @returns {string} The unhashed reset token to be sent to the user via email.
+ */
 userSchema.methods.getResetPasswordToken = function() {
   const resetToken = crypto.randomBytes(20).toString('hex');
 
@@ -70,8 +98,7 @@ userSchema.methods.getResetPasswordToken = function() {
     .update(resetToken)
     .digest('hex');
 
-  // Set expire time (10 minutes)
-  this.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
+  this.resetPasswordExpire = Date.now() + RESET_TOKEN_EXPIRY_MS;
 
   return resetToken;
 };
