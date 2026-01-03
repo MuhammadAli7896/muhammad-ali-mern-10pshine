@@ -1,9 +1,21 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
 export default function Login() {
     const [showPassword, setShowPassword] = useState(false);
     const [showForgotModal, setShowForgotModal] = useState(false);
+
+    // Close modal on Escape key press
+    useEffect(() => {
+        const handleEscapeKey = (event: KeyboardEvent) => {
+            if (event.key === 'Escape' && showForgotModal) {
+                setShowForgotModal(false);
+            }
+        };
+
+        document.addEventListener('keydown', handleEscapeKey);
+        return () => document.removeEventListener('keydown', handleEscapeKey);
+    }, [showForgotModal]);
 
     return (
         <>
@@ -30,6 +42,7 @@ export default function Login() {
                                         id="email"
                                         type="email"
                                         placeholder="you@example.com"
+                                        autoComplete="email"
                                         className="w-full px-3 py-2.5 lg:px-4 lg:py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all text-sm lg:text-base"
                                         required
                                     />
@@ -45,12 +58,14 @@ export default function Login() {
                                             id="password"
                                             type={showPassword ? "text" : "password"}
                                             placeholder="••••••••"
+                                            autoComplete="current-password"
                                             className="w-full px-3 py-2.5 lg:px-4 lg:py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all text-sm lg:text-base pr-10"
                                             required
                                         />
                                         <button
                                             type="button"
                                             onClick={() => setShowPassword(!showPassword)}
+                                            aria-label="Toggle password visibility"
                                             className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
                                         >
                                             {showPassword ? (
@@ -131,8 +146,17 @@ export default function Login() {
 
             {/* Forgot Password Modal */}
                 {showForgotModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm">
-                        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 lg:p-8 max-w-md w-full relative animate-in fade-in zoom-in duration-200">
+                    <div 
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm"
+                        onClick={() => setShowForgotModal(false)}
+                    >
+                        <div 
+                            className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 lg:p-8 max-w-md w-full relative animate-in fade-in zoom-in duration-200"
+                            role="dialog"
+                            aria-modal="true"
+                            aria-labelledby="modal-title"
+                            onClick={(e) => e.stopPropagation()}
+                        >
                             {/* Close Button */}
                             <button
                                 onClick={() => setShowForgotModal(false)}
@@ -145,7 +169,7 @@ export default function Login() {
 
                             {/* Modal Header */}
                             <div className="mb-6">
-                                <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">
+                                <h3 id="modal-title" className="text-2xl font-bold text-gray-800 dark:text-white mb-2">
                                     Reset Password
                                 </h3>
                                 <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -163,6 +187,7 @@ export default function Login() {
                                         id="reset-email"
                                         type="email"
                                         placeholder="you@example.com"
+                                        autoComplete="email"
                                         className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all"
                                         required
                                     />
