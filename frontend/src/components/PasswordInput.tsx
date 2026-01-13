@@ -7,6 +7,9 @@ interface PasswordInputProps {
     autoComplete?: 'current-password' | 'new-password';
     required?: boolean;
     className?: string;
+    value?: string;
+    onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    disabled?: boolean;
 }
 
 export default function PasswordInput({
@@ -15,7 +18,10 @@ export default function PasswordInput({
     placeholder = '••••••••',
     autoComplete = 'current-password',
     required = false,
-    className = ''
+    className = '',
+    value,
+    onChange,
+    disabled = false
 }: PasswordInputProps) {
     const [showPassword, setShowPassword] = useState(false);
 
@@ -30,14 +36,18 @@ export default function PasswordInput({
                     type={showPassword ? "text" : "password"}
                     placeholder={placeholder}
                     autoComplete={autoComplete}
-                    className="w-full px-3 py-2.5 lg:px-4 lg:py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all text-sm lg:text-base pr-10"
+                    value={value}
+                    onChange={onChange}
+                    disabled={disabled}
+                    className="w-full px-3 py-2.5 lg:px-4 lg:py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all text-sm lg:text-base pr-10 disabled:opacity-50 disabled:cursor-not-allowed"
                     required={required}
                 />
                 <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
+                    disabled={disabled}
                     aria-label="Toggle password visibility"
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors disabled:opacity-50"
                 >
                     {showPassword ? (
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
