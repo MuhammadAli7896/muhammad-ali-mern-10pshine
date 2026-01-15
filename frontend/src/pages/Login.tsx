@@ -1,10 +1,25 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
+import { useAuth } from '../hooks/useAuth';
 import PasswordInput from '../components/PasswordInput';
 
 export default function Login() {
     const [showForgotModal, setShowForgotModal] = useState(false);
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
     const modalRef = useRef<HTMLDivElement>(null);
+    const navigate = useNavigate();
+    const { login, isAuthenticated } = useAuth();
+
+    // Redirect if already authenticated
+    useEffect(() => {
+        if (isAuthenticated) {
+            navigate('/notes');
+        }
+    }, [isAuthenticated, navigate]);
 
     // Prevent background scrolling and manage focus when modal opens
     useEffect(() => {
@@ -38,9 +53,44 @@ export default function Login() {
         return () => document.removeEventListener('keydown', handleEscapeKey);
     }, [showForgotModal]);
 
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setErrorMessage('');
+
+        // Validation
+        if (!email.trim()) {
+            toast.error('Please enter your email');
+            return;
+        }
+        // Email format validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            toast.error('Please enter a valid email address');
+            return;
+        }
+        if (!password) {
+            toast.error('Please enter your password');
+            return;
+        }
+
+        setIsSubmitting(true);
+
+        try {
+            await login(email, password);
+            toast.success('Welcome back!');
+            navigate('/notes');
+        } catch (error: unknown) {
+            const message = (error as Error).message || 'Login failed. Please try again.';
+            toast.error(message);
+            setErrorMessage(message);
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
     return (
         <>
-            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900 px-4 py-6 lg:px-8">
+            <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-indigo-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900 px-4 py-6 lg:px-8">
                 <div className="flex flex-col lg:flex-row items-center justify-between w-full max-w-6xl gap-6 lg:gap-12">
 
                     {/* Left Section - Form */}
@@ -52,8 +102,15 @@ export default function Login() {
                                 Welcome Back!
                             </h2>
 
+                            {/* Error Message */}
+                            {errorMessage && (
+                                <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-800 text-red-700 dark:text-red-400 rounded-lg text-sm">
+                                    {errorMessage}
+                                </div>
+                            )}
+
                             {/* Form */}
-                            <form className="space-y-4 lg:space-y-5">
+                            <form onSubmit={handleSubmit} className="space-y-4 lg:space-y-5">
                                 {/* Email Field */}
                                 <div>
                                     <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 lg:mb-2">
@@ -64,7 +121,10 @@ export default function Login() {
                                         type="email"
                                         placeholder="you@example.com"
                                         autoComplete="email"
-                                        className="w-full px-3 py-2.5 lg:px-4 lg:py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all text-sm lg:text-base"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        disabled={isSubmitting}
+                                        className="w-full px-3 py-2.5 lg:px-4 lg:py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all text-sm lg:text-base disabled:opacity-50 disabled:cursor-not-allowed"
                                         required
                                     />
                                 </div>
@@ -74,6 +134,9 @@ export default function Login() {
                                     id="password"
                                     label="Password"
                                     autoComplete="current-password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    disabled={isSubmitting}
                                     required
                                 />
 
@@ -82,7 +145,8 @@ export default function Login() {
                                     <button
                                         type="button"
                                         onClick={() => setShowForgotModal(true)}
-                                        className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium"
+                                        disabled={isSubmitting}
+                                        className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium disabled:opacity-50"
                                     >
                                         Forgot password?
                                     </button>
@@ -91,9 +155,10 @@ export default function Login() {
                                 {/* Submit Button */}
                                 <button
                                     type="submit"
-                                    className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-2.5 lg:py-3 rounded-lg font-semibold hover:shadow-lg hover:scale-[1.02] transition-all duration-200 text-sm lg:text-base"
+                                    disabled={isSubmitting}
+                                    className="w-full bg-linear-to-r from-indigo-600 to-purple-600 text-white py-2.5 lg:py-3 rounded-lg font-semibold hover:shadow-lg hover:scale-[1.02] transition-all duration-200 text-sm lg:text-base disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                                 >
-                                    Sign In
+                                    {isSubmitting ? 'Signing In...' : 'Sign In'}
                                 </button>
                             </form>
 
@@ -202,7 +267,7 @@ export default function Login() {
                                     </button>
                                     <button
                                         type="submit"
-                                        className="flex-1 px-4 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-semibold hover:shadow-lg hover:scale-[1.02] transition-all duration-200"
+                                        className="flex-1 px-4 py-3 bg-linear-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-semibold hover:shadow-lg hover:scale-[1.02] transition-all duration-200"
                                     >
                                         Send Link
                                     </button>
