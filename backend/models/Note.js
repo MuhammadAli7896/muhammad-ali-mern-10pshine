@@ -33,8 +33,15 @@ const noteSchema = new mongoose.Schema({
   },
   color: {
     type: String,
-    default: '#ffffff',
-    match: [/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/, 'Invalid color format'],
+    default: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    validate: {
+      validator: function(v) {
+        // Allow hex colors or gradient strings
+        return /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(v) || 
+               /^linear-gradient\(/.test(v);
+      },
+      message: 'Invalid color format. Must be hex color or CSS gradient'
+    }
   },
 }, {
   timestamps: true,
