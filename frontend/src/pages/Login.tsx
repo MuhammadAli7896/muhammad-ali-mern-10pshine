@@ -1,16 +1,19 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../hooks/useAuth';
 import PasswordInput from '../components/PasswordInput';
+import ForgotPasswordDialog from '../components/ForgotPasswordDialog';
+import VerifyTokenDialog from '../components/VerifyTokenDialog';
 
 export default function Login() {
     const [showForgotModal, setShowForgotModal] = useState(false);
+    const [showVerifyModal, setShowVerifyModal] = useState(false);
+    const [resetEmail, setResetEmail] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
-    const modalRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
     const { login, isAuthenticated } = useAuth();
 
@@ -21,37 +24,18 @@ export default function Login() {
         }
     }, [isAuthenticated, navigate]);
 
-    // Prevent background scrolling and manage focus when modal opens
-    useEffect(() => {
-        if (showForgotModal) {
-            // Prevent background scrolling
-            document.body.style.overflow = 'hidden';
-            
-            // Move focus to modal
-            if (modalRef.current) {
-                modalRef.current.focus();
-            }
-        } else {
-            // Restore background scrolling
-            document.body.style.overflow = '';
-        }
+    const handleForgotPasswordSuccess = (email: string) => {
+        setResetEmail(email);
+        setShowVerifyModal(true);
+    };
 
-        return () => {
-            document.body.style.overflow = '';
-        };
-    }, [showForgotModal]);
-
-    // Close modal on Escape key press
-    useEffect(() => {
-        const handleEscapeKey = (event: KeyboardEvent) => {
-            if (event.key === 'Escape' && showForgotModal) {
-                setShowForgotModal(false);
-            }
-        };
-
-        document.addEventListener('keydown', handleEscapeKey);
-        return () => document.removeEventListener('keydown', handleEscapeKey);
-    }, [showForgotModal]);
+    const handleVerifyTokenSuccess = (token: string) => {
+        setShowVerifyModal(false);
+        // Navigate to reset password page with token and email in state
+        navigate('/reset-password', {
+            state: { token, email: resetEmail },
+        });
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -204,78 +188,20 @@ export default function Login() {
                 </div>
             </div>
 
-            {/* Forgot Password Modal */}
-                {showForgotModal && (
-                    <div 
-                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm"
-                        onClick={() => setShowForgotModal(false)}
-                        aria-label="Close modal"
-                    >
-                        <div 
-                            ref={modalRef}
-                            tabIndex={-1}
-                            className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 lg:p-8 max-w-md w-full relative animate-in fade-in zoom-in duration-200"
-                            role="dialog"
-                            aria-modal="true"
-                            aria-labelledby="modal-title"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            {/* Close Button */}
-                            <button
-                                onClick={() => setShowForgotModal(false)}
-                                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
+            {/* Forgot Password Dialog */}
+            <ForgotPasswordDialog
+                isOpen={showForgotModal}
+                onClose={() => setShowForgotModal(false)}
+                onSuccess={handleForgotPasswordSuccess}
+            />
 
-                            {/* Modal Header */}
-                            <div className="mb-6">
-                                <h3 id="modal-title" className="text-2xl font-bold text-gray-800 dark:text-white mb-2">
-                                    Reset Password
-                                </h3>
-                                <p className="text-sm text-gray-600 dark:text-gray-400">
-                                    Enter your email address and we'll send you a link to reset your password.
-                                </p>
-                            </div>
-
-                            {/* Form */}
-                            <form onSubmit={(e) => { e.preventDefault(); /* Handle submit */ }} className="space-y-5">
-                                <div>
-                                    <label htmlFor="reset-email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                        Email Address
-                                    </label>
-                                    <input
-                                        id="reset-email"
-                                        type="email"
-                                        placeholder="you@example.com"
-                                        autoComplete="email"
-                                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all"
-                                        required
-                                    />
-                                </div>
-
-                                {/* Buttons */}
-                                <div className="flex gap-3">
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowForgotModal(false)}
-                                        className="flex-1 px-4 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        className="flex-1 px-4 py-3 bg-linear-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-semibold hover:shadow-lg hover:scale-[1.02] transition-all duration-200"
-                                    >
-                                        Send Link
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                )}
+            {/* Verify Token Dialog */}
+            <VerifyTokenDialog
+                isOpen={showVerifyModal}
+                onClose={() => setShowVerifyModal(false)}
+                email={resetEmail}
+                onSuccess={handleVerifyTokenSuccess}
+            />
         </>
     );
 }
