@@ -80,7 +80,7 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
  * Generates a password reset token for the user.
  *
  * This method:
- * - Generates a random reset token.
+ * - Generates a random 6-digit numeric reset token.
  * - Hashes the token and assigns it to `this.resetPasswordToken`.
  * - Sets `this.resetPasswordExpire` to an expiry time from now.
  *
@@ -92,11 +92,13 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
  *   const resetToken = user.getResetPasswordToken();
  *   await user.save({ validateBeforeSave: false });
  *
- * @returns {string} The unhashed reset token to be sent to the user via email.
+ * @returns {string} The unhashed 6-digit reset token to be sent to the user via email.
  */
 userSchema.methods.getResetPasswordToken = function() {
-  const resetToken = crypto.randomBytes(20).toString('hex');
+  // Generate a 6-digit random token (100000 to 999999)
+  const resetToken = Math.floor(100000 + Math.random() * 900000).toString();
 
+  // Hash the token before storing
   this.resetPasswordToken = crypto
     .createHash('sha256')
     .update(resetToken)
@@ -104,6 +106,7 @@ userSchema.methods.getResetPasswordToken = function() {
 
   this.resetPasswordExpire = Date.now() + RESET_TOKEN_EXPIRY_MS;
 
+  // Return the plain text token to be sent via email
   return resetToken;
 };
 

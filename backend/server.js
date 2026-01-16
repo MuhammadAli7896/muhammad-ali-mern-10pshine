@@ -24,6 +24,18 @@ if (process.env.NODE_ENV !== 'production') {
     if (filteredBody.password) {
       filteredBody.password = '***HIDDEN***';
     }
+    if (filteredBody.newPassword) {
+      filteredBody.newPassword = '***HIDDEN***';
+    }
+    if (filteredBody.confirmPassword) {
+      filteredBody.confirmPassword = '***HIDDEN***';
+    }
+    if (filteredBody.currentPassword) {
+      filteredBody.currentPassword = '***HIDDEN***';
+    }
+    if (filteredBody.token) {
+      filteredBody.token = '***HIDDEN***';
+    }
     console.log(`📝 ${req.method} ${req.path}`, filteredBody);
     
     // Log response (filter sensitive data)
