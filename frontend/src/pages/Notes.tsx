@@ -334,12 +334,12 @@ export default function Notes() {
               <h2 className="text-3xl font-bold text-gray-800 dark:text-white">
                 {searchQuery || selectedTags.length > 0 || viewFilter !== 'all'
                   ? 'No Notes Found'
-                  : 'Create Your First Note'}
+                  : 'No Notes Yet'}
               </h2>
               <p className="text-lg text-gray-600 dark:text-gray-400">
                 {searchQuery || selectedTags.length > 0 || viewFilter !== 'all'
-                  ? 'Try adjusting your filters or search query'
-                  : 'Start capturing your thoughts, ideas, and reminders'}
+                  ? 'Try adjusting your filters or search query to find your notes'
+                  : 'Create notes to organize your thoughts, tasks, and important information'}
               </p>
               <div className="pt-4">
                 <button
@@ -347,7 +347,7 @@ export default function Notes() {
                   className="px-8 py-3 bg-linear-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-semibold hover:shadow-lg hover:scale-105 transition-all duration-200 flex items-center gap-2 mx-auto"
                 >
                   <Plus className="w-5 h-5" />
-                  Create Your First Note
+                  Create Note
                 </button>
               </div>
             </div>
