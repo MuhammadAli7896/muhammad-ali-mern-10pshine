@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const { connectDB } = require('./config/database');
+const { logger, requestLoggerMiddleware } = require('./utils/logger');
 
 const app = express();
 
@@ -16,34 +17,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// Request logging middleware (development)
-if (process.env.NODE_ENV !== 'production') {
-  app.use((req, res, next) => {
-    // Filter sensitive data from body
-    const filteredBody = { ...req.body };
-    if (filteredBody.password) {
-      filteredBody.password = '***HIDDEN***';
-    }
-    console.log(`📝 ${req.method} ${req.path}`, filteredBody);
-    
-    // Log response (filter sensitive data)
-    const originalJson = res.json;
-    res.json = function(data) {
-      const filteredData = JSON.parse(JSON.stringify(data));
-      // Hide tokens in response
-      if (filteredData.data?.accessToken) {
-        filteredData.data.accessToken = '***HIDDEN***';
-      }
-      if (filteredData.data?.refreshToken) {
-        filteredData.data.refreshToken = '***HIDDEN***';
-      }
-      console.log(`📤 Response:`, filteredData);
-      return originalJson.call(this, data);
-    };
-    
-    next();
-  });
-}
+// Request/Response logging middleware with Pino
+app.use(requestLoggerMiddleware);
 
 // MongoDB Connection
 connectDB();
@@ -87,7 +62,9 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`🚀 Server is running on port ${PORT}`);
-  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`📝 API URL: http://localhost:${PORT}`);
+  logger.info({
+    port: PORT,
+    environment: process.env.NODE_ENV || 'development',
+    url: `http://localhost:${PORT}`,
+  }, `Server started on port ${PORT}`);
 });

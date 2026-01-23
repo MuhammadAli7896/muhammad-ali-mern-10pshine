@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { logger, logDatabase } = require('../utils/logger');
 
 /**
  * MongoDB Database Configuration
@@ -11,33 +12,34 @@ const connectDB = async () => {
       process.env.MONGODB_URI || 'mongodb://localhost:27017/notes'
     );
 
-    console.log('✅ MongoDB Connected Successfully');
-    console.log(`📊 Database: ${conn.connection.db.databaseName}`);
-    console.log(`🔗 Host: ${conn.connection.host}`);
-    console.log(`📡 Port: ${conn.connection.port}`);
+    logDatabase('connected', {
+      database: conn.connection.db.databaseName,
+      host: conn.connection.host,
+      port: conn.connection.port,
+    });
 
     // Log collections when they're created
     mongoose.connection.on('connected', () => {
-      console.log('🟢 Mongoose connected to MongoDB');
+      logger.info('Mongoose connected to MongoDB');
     });
 
     mongoose.connection.on('error', (err) => {
-      console.error('❌ Mongoose connection error:', err);
+      logger.error({ err }, 'Mongoose connection error');
     });
 
     mongoose.connection.on('disconnected', () => {
-      console.log('🔴 Mongoose disconnected from MongoDB');
+      logger.warn('Mongoose disconnected from MongoDB');
     });
 
     // Graceful shutdown
     process.on('SIGINT', async () => {
       await mongoose.connection.close();
-      console.log('🔌 MongoDB connection closed through app termination');
+      logger.info('MongoDB connection closed through app termination');
       process.exit(0);
     });
 
   } catch (error) {
-    console.error('❌ MongoDB Connection Error:', error.message);
+    logger.fatal({ err: error }, 'MongoDB Connection Error');
     process.exit(1);
   }
 };
@@ -55,7 +57,7 @@ const getDBStats = async () => {
       indexSize: `${(stats.indexSize / 1024 / 1024).toFixed(2)} MB`,
     };
   } catch (error) {
-    console.error('Error getting DB stats:', error);
+    logger.error({ err: error }, 'Error getting DB stats');
     return null;
   }
 };
@@ -68,7 +70,7 @@ const listCollections = async () => {
     const collections = await mongoose.connection.db.listCollections().toArray();
     return collections.map(col => col.name);
   } catch (error) {
-    console.error('Error listing collections:', error);
+    logger.error({ err: error }, 'Error listing collections');
     return [];
   }
 };

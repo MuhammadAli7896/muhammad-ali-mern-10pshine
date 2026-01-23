@@ -1,10 +1,19 @@
 const { sendError } = require('../utils/responseHandler');
+const { logger } = require('../utils/logger');
 
 /**
  * Global error handler middleware
  */
 const errorHandler = (err, req, res, next) => {
-  console.error('Error:', err);
+  // Log error with full context
+  logger.error({
+    err,
+    method: req.method,
+    path: req.path,
+    query: req.query,
+    body: req.body,
+    userId: req.userId,
+  }, `Error: ${err.message}`);
 
   // Mongoose validation error
   if (err.name === 'ValidationError') {
