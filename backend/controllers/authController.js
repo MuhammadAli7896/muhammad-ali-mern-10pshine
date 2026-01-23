@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const { generateTokens, verifyRefreshToken, hashToken, setAuthCookies, clearAuthCookies } = require('../utils/tokenUtils');
 const { sendSuccess, sendError, asyncHandler } = require('../utils/responseHandler');
+const { logger, logAuth } = require('../utils/logger');
 const { sendResetPasswordEmail } = require('../utils/emailService');
 const crypto = require('crypto');
 
@@ -278,6 +279,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
 
   if (!user) {
     // For security, don't reveal if email exists
+    logger.warn({ email }, 'Password reset requested for non-existent email');
     return sendSuccess(res, 200, 'If an account exists with that email, a password reset token has been sent');
   }
 
@@ -285,10 +287,13 @@ const forgotPassword = asyncHandler(async (req, res) => {
   const resetToken = user.getResetPasswordToken();
   await user.save({ validateBeforeSave: false });
 
+  logger.info({ userId: user._id, email }, 'Password reset token generated');
+
   try {
     // Send email with reset token
     await sendResetPasswordEmail(email, resetToken, user.name);
 
+    logAuth('password-reset-requested', { userId: user._id, email });
     sendSuccess(res, 200, 'Password reset token has been sent to your email');
   } catch (error) {
     // If email fails, clear the reset token
@@ -296,7 +301,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
     user.resetPasswordExpire = undefined;
     await user.save({ validateBeforeSave: false });
 
-    console.error('Email send error:', error);
+    logger.error({ err: error, email, userId: user._id }, 'Failed to send password reset email');
     return sendError(res, 500, 'Failed to send reset email. Please try again later.');
   }
 });
@@ -326,9 +331,11 @@ const verifyResetToken = asyncHandler(async (req, res) => {
   });
 
   if (!user) {
+    logger.warn({ tokenProvided: !!token }, 'Invalid or expired reset token verification attempt');
     return sendError(res, 400, 'Invalid or expired reset token');
   }
 
+  logger.info({ userId: user._id, email: user.email }, 'Reset token verified successfully');
   sendSuccess(res, 200, 'Token is valid', {
     email: user.email,
   });
@@ -368,8 +375,11 @@ const resetPassword = asyncHandler(async (req, res) => {
   }).select('+password +resetPasswordToken +resetPasswordExpire');
 
   if (!user) {
+    logger.warn({ tokenProvided: !!token }, 'Invalid or expired reset token for password reset');
     return sendError(res, 400, 'Invalid or expired reset token');
   }
+
+  logger.info({ userId: user._id, email: user.email }, 'Resetting password and clearing all sessions');
 
   // Update password
   user.password = newPassword;
@@ -378,6 +388,7 @@ const resetPassword = asyncHandler(async (req, res) => {
   user.refreshToken = undefined; // Clear refresh tokens (logout from all devices)
   await user.save();
 
+  logAuth('password-reset-completed', { userId: user._id, email: user.email });
   sendSuccess(res, 200, 'Password has been reset successfully. Please log in with your new password.');
 });
 

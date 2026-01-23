@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+const { logger, logEmail } = require('./logger');
 
 /**
  * Creates a nodemailer transporter configured for Gmail SMTP.
@@ -16,13 +17,14 @@ const createTransporter = () => {
   const { EMAIL_USER, EMAIL_PASS } = process.env;
 
   if (!EMAIL_USER || !EMAIL_PASS) {
-    console.error('❌ Email configuration missing. Please set EMAIL_USER and EMAIL_PASS in .env file');
-    console.error('EMAIL_USER:', EMAIL_USER ? 'Set ✓' : 'Missing ✗');
-    console.error('EMAIL_PASS:', EMAIL_PASS ? 'Set ✓' : 'Missing ✗');
+    logger.error({
+      emailUserSet: !!EMAIL_USER,
+      emailPassSet: !!EMAIL_PASS,
+    }, 'Email configuration missing. Please set EMAIL_USER and EMAIL_PASS in .env file');
     return null;
   }
 
-  console.log('📧 Creating email transporter for:', EMAIL_USER);
+  logger.debug({ emailUser: EMAIL_USER }, 'Creating email transporter');
 
   return nodemailer.createTransport({
     service: 'gmail',
@@ -42,9 +44,12 @@ const createTransporter = () => {
  * @returns {Promise<Object>} Nodemailer send result
  */
 const sendResetPasswordEmail = async (email, resetToken, userName = 'User') => {
+  logger.info({ to: email, userName }, 'Preparing to send password reset email');
+  
   const transporter = createTransporter();
 
   if (!transporter) {
+    logger.error('Email transporter not configured');
     throw new Error('Email service not configured');
   }
 
@@ -189,13 +194,20 @@ Think Nest Team
 
   try {
     const info = await transporter.sendMail(mailOptions);
-    console.log('✅ Reset email sent successfully:', info.messageId);
-    console.log('📬 Email sent to:', email);
+    logEmail('sent-password-reset', { 
+      to: email, 
+      messageId: info.messageId,
+      userName 
+    });
+    logger.info({ messageId: info.messageId, to: email }, 'Password reset email sent successfully');
     return info;
   } catch (error) {
-    console.error('❌ Error sending reset email:', error.message);
-    console.error('Error code:', error.code);
-    console.error('Error response:', error.response);
+    logger.error({ 
+      err: error, 
+      to: email,
+      code: error.code,
+      response: error.response 
+    }, 'Failed to send password reset email');
     throw new Error('Failed to send reset email: ' + error.message);
   }
 };
