@@ -7,6 +7,7 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Notes from './pages/Notes';
+import ResetPassword from './pages/ResetPassword';
 import NotFound from './pages/NotFound';
 
 function App() {
@@ -58,6 +59,9 @@ function App() {
               </PublicRoute>
             }
           />
+          
+          {/* Password reset route - public but requires valid token via state */}
+          <Route path="/reset-password" element={<ResetPassword />} />
           
           {/* Protected routes - require authentication */}
           <Route
