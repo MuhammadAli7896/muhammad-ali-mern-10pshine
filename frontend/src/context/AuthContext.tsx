@@ -5,6 +5,7 @@ import type { User } from '../lib/api';
 
 interface AuthContextType {
   user: User | null;
+  setUser: React.Dispatch<React.SetStateAction<User | null>>;
   loading: boolean;
   error: string | null;
   login: (email: string, password: string) => Promise<void>;
@@ -128,6 +129,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const value: AuthContextType = {
     user,
+    setUser,
     loading,
     error,
     login,

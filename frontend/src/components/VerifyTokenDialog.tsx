@@ -55,18 +55,20 @@ export default function VerifyTokenDialog({
   const handlePaste = (e: React.ClipboardEvent) => {
     e.preventDefault();
     const pastedData = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
-    const newToken = [...token];
     
-    for (let i = 0; i < pastedData.length; i++) {
-      newToken[i] = pastedData[i];
+    if (pastedData.length > 0) {
+      const newToken = ['', '', '', '', '', ''];
+      pastedData.split('').forEach((char, i) => {
+        if (i < 6) {
+          newToken[i] = char;
+        }
+      });
+      setToken(newToken);
+      
+      // Focus the last filled input or the last input if all 6 digits pasted
+      const nextIndex = Math.min(pastedData.length, 5);
+      inputRefs.current[nextIndex]?.focus();
     }
-    
-    setToken(newToken);
-    
-    // Focus the next empty input or the last one
-    const nextEmptyIndex = newToken.findIndex((val) => !val);
-    const focusIndex = nextEmptyIndex === -1 ? 5 : nextEmptyIndex;
-    inputRefs.current[focusIndex]?.focus();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -149,7 +151,7 @@ export default function VerifyTokenDialog({
                   value={digit}
                   onChange={(e) => handleChange(index, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(index, e)}
-                  onPaste={index === 0 ? handlePaste : undefined}
+                  onPaste={handlePaste}
                   disabled={isLoading}
                   className="w-12 h-14 text-center text-2xl font-bold border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 />
