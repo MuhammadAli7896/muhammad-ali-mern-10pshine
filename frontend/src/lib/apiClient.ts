@@ -31,8 +31,12 @@ apiClient.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // If error is 401 and we haven't tried to refresh yet
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Don't try to refresh token for login, signup, or refresh endpoints
+    const noRefreshUrls = ['/auth/login', '/auth/signup', '/auth/refresh', '/auth/forgot-password', '/auth/verify-reset-token', '/auth/reset-password'];
+    const isNoRefreshUrl = noRefreshUrls.some(url => originalRequest.url?.includes(url));
+
+    // If error is 401 and we haven't tried to refresh yet, and it's not a login/signup request
+    if (error.response?.status === 401 && !originalRequest._retry && !isNoRefreshUrl) {
       originalRequest._retry = true;
 
       try {

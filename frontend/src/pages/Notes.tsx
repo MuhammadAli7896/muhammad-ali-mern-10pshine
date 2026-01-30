@@ -9,6 +9,7 @@ import NoteCard from '../components/NoteCard';
 import AddEditNoteModal from '../components/AddEditNoteModal';
 import type { NoteFormData } from '../components/AddEditNoteModal';
 import SearchBar from '../components/SearchBar';
+import UserProfileModal from '../components/UserProfileModal';
 
 export default function Notes() {
   const { user, logout } = useAuth();
@@ -21,6 +22,7 @@ export default function Notes() {
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   // Filter state
   const [searchQuery, setSearchQuery] = useState('');
@@ -210,7 +212,10 @@ export default function Notes() {
               <Plus className="w-5 h-5" />
               <span className="hidden sm:inline">New Note</span>
             </button>
-            <div className="hidden md:flex items-center gap-3">
+            <button
+              onClick={() => setShowProfileModal(true)}
+              className="hidden md:flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            >
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-full bg-linear-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm">
                   {user?.name?.charAt(0).toUpperCase()}
@@ -224,7 +229,7 @@ export default function Notes() {
                   </span>
                 </div>
               </div>
-            </div>
+            </button>
             <button
               onClick={handleLogout}
               disabled={isLoggingOut}
@@ -412,6 +417,12 @@ export default function Notes() {
         }}
         onSave={handleSaveNote}
         note={editingNote}
+      />
+
+      {/* User Profile Modal */}
+      <UserProfileModal
+        isOpen={showProfileModal}
+        onClose={() => setShowProfileModal(false)}
       />
     </div>
   );
