@@ -2,7 +2,7 @@ const User = require('../models/User');
 const { generateTokens, verifyRefreshToken, hashToken, setAuthCookies, clearAuthCookies } = require('../utils/tokenUtils');
 const { sendSuccess, sendError, asyncHandler } = require('../utils/responseHandler');
 const { logger, logAuth } = require('../utils/logger');
-const { sendResetPasswordEmail } = require('../utils/emailService');
+const { sendResetPasswordEmail, sendPasswordChangeEmail } = require('../utils/emailService');
 const crypto = require('crypto');
 
 /**
@@ -392,6 +392,162 @@ const resetPassword = asyncHandler(async (req, res) => {
   sendSuccess(res, 200, 'Password has been reset successfully. Please log in with your new password.');
 });
 
+/**
+ * @route   PUT /api/auth/profile/name
+ * @desc    Update username
+ * @access  Private
+ */
+const updateUsername = asyncHandler(async (req, res) => {
+  const { name } = req.body;
+
+  if (!name || !name.trim()) {
+    return sendError(res, 400, 'Please provide a name');
+  }
+
+  const user = await User.findById(req.userId);
+
+  if (!user) {
+    return sendError(res, 404, 'User not found');
+  }
+
+  user.name = name.trim();
+  await user.save();
+
+  logger.info({ userId: user._id, newName: name }, 'Username updated');
+  logAuth('username-updated', { userId: user._id, email: user.email });
+
+  sendSuccess(res, 200, 'Username updated successfully', {
+    user: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+    },
+  });
+});
+
+/**
+ * @route   POST /api/auth/profile/change-password-request
+ * @desc    Request password change with email verification
+ * @access  Private
+ */
+const requestPasswordChange = asyncHandler(async (req, res) => {
+  const { newPassword, confirmPassword } = req.body;
+
+  // Validation
+  if (!newPassword || !confirmPassword) {
+    return sendError(res, 400, 'Please provide new password and confirmation');
+  }
+
+  if (newPassword !== confirmPassword) {
+    return sendError(res, 400, 'Passwords do not match');
+  }
+
+  if (newPassword.length < 8) {
+    return sendError(res, 400, 'Password must be at least 8 characters long');
+  }
+
+  const user = await User.findById(req.userId).select('+passwordChangeToken +passwordChangeExpire +pendingPassword');
+
+  if (!user) {
+    return sendError(res, 404, 'User not found');
+  }
+
+  // Hash the new password and store temporarily
+  const bcrypt = require('bcryptjs');
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(newPassword, salt);
+  user.pendingPassword = hashedPassword;
+
+  // Generate verification token
+  const verificationToken = user.getPasswordChangeToken();
+  await user.save({ validateBeforeSave: false });
+
+  logger.info({ userId: user._id, email: user.email }, 'Password change requested, sending verification email');
+
+  try {
+    // Send verification email
+    await sendPasswordChangeEmail(user.email, verificationToken, user.name);
+
+    logAuth('password-change-requested', { userId: user._id, email: user.email });
+    sendSuccess(res, 200, 'Verification code has been sent to your email');
+  } catch (error) {
+    // If email fails, clear the tokens
+    user.passwordChangeToken = undefined;
+    user.passwordChangeExpire = undefined;
+    user.pendingPassword = undefined;
+    await user.save({ validateBeforeSave: false });
+
+    logger.error({ err: error, email: user.email, userId: user._id }, 'Failed to send password change verification email');
+    return sendError(res, 500, 'Failed to send verification email. Please try again later.');
+  }
+});
+
+/**
+ * @route   POST /api/auth/profile/verify-password-change
+ * @desc    Verify token and complete password change
+ * @access  Private
+ */
+const verifyPasswordChange = asyncHandler(async (req, res) => {
+  const { token } = req.body;
+
+  if (!token) {
+    return sendError(res, 400, 'Please provide verification code');
+  }
+
+  // Hash the provided token
+  const hashedToken = crypto
+    .createHash('sha256')
+    .update(token)
+    .digest('hex');
+
+  // Find user with valid token
+  const user = await User.findOne({
+    _id: req.userId,
+    passwordChangeToken: hashedToken,
+    passwordChangeExpire: { $gt: Date.now() },
+  }).select('+password +passwordChangeToken +passwordChangeExpire +pendingPassword +refreshToken');
+
+  if (!user) {
+    logger.warn({ userId: req.userId }, 'Invalid or expired password change verification token');
+    return sendError(res, 400, 'Invalid or expired verification code');
+  }
+
+  if (!user.pendingPassword) {
+    logger.error({ userId: user._id }, 'No pending password found for password change');
+    return sendError(res, 400, 'No pending password change found');
+  }
+
+  logger.info({ userId: user._id, email: user.email }, 'Password change verified, updating password');
+
+  // Update password with the pending hashed password
+  user.password = user.pendingPassword;
+  user.passwordChangeToken = undefined;
+  user.passwordChangeExpire = undefined;
+  user.pendingPassword = undefined;
+  
+  // Generate new tokens to keep user logged in
+  const { accessToken, refreshToken } = generateTokens(user._id.toString());
+  
+  // Hash and save new refresh token
+  user.refreshToken = hashToken(refreshToken);
+  
+  // Skip password hashing since pendingPassword is already hashed
+  await user.save({ validateBeforeSave: false });
+
+  // Set new auth cookies
+  setAuthCookies(res, accessToken, refreshToken);
+
+  logAuth('password-change-completed', { userId: user._id, email: user.email });
+  sendSuccess(res, 200, 'Password changed successfully. You are now logged in with your new password.', {
+    user: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+    },
+    accessToken,
+  });
+});
+
 module.exports = {
   signup,
   login,
@@ -403,4 +559,7 @@ module.exports = {
   forgotPassword,
   verifyResetToken,
   resetPassword,
+  updateUsername,
+  requestPasswordChange,
+  verifyPasswordChange,
 };
