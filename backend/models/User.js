@@ -36,6 +36,18 @@ const userSchema = new mongoose.Schema({
     type: Date,
     select: false,
   },
+  passwordChangeToken: {
+    type: String,
+    select: false,
+  },
+  passwordChangeExpire: {
+    type: Date,
+    select: false,
+  },
+  pendingPassword: {
+    type: String,
+    select: false,
+  },
   refreshToken: {
     type: String,
     select: false,
@@ -108,6 +120,28 @@ userSchema.methods.getResetPasswordToken = function() {
 
   // Return the plain text token to be sent via email
   return resetToken;
+};
+
+/**
+ * Generates a password change verification token for authenticated users.
+ * Similar to getResetPasswordToken but for profile password changes.
+ * 
+ * @returns {string} The unhashed 6-digit verification token
+ */
+userSchema.methods.getPasswordChangeToken = function() {
+  // Generate a 6-digit random token
+  const changeToken = Math.floor(100000 + Math.random() * 900000).toString();
+
+  // Hash the token before storing
+  this.passwordChangeToken = crypto
+    .createHash('sha256')
+    .update(changeToken)
+    .digest('hex');
+
+  this.passwordChangeExpire = Date.now() + RESET_TOKEN_EXPIRY_MS;
+
+  // Return the plain text token to be sent via email
+  return changeToken;
 };
 
 module.exports = mongoose.model('User', userSchema);

@@ -96,19 +96,21 @@ const hashToken = (token) => {
  * @param {string} refreshToken - Refresh token to set
  */
 const setAuthCookies = (res, accessToken, refreshToken) => {
+  const isProduction = process.env.NODE_ENV === 'production';
+  
   // Access token cookie - httpOnly, secure in production
   res.cookie('accessToken', accessToken, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    secure: isProduction,
+    sameSite: isProduction ? 'strict' : 'lax', // Use 'lax' in development
     maxAge: 15 * 60 * 1000, // 15 minutes
   });
 
   // Refresh token cookie - httpOnly, secure in production
   res.cookie('refreshToken', refreshToken, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    secure: isProduction,
+    sameSite: isProduction ? 'strict' : 'lax', // Use 'lax' in development
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   });
 };
@@ -118,17 +120,19 @@ const setAuthCookies = (res, accessToken, refreshToken) => {
  * @param {Object} res - Express response object
  */
 const clearAuthCookies = (res) => {
+  const isProduction = process.env.NODE_ENV === 'production';
+  
   res.cookie('accessToken', '', {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    secure: isProduction,
+    sameSite: isProduction ? 'strict' : 'lax',
     expires: new Date(0),
   });
 
   res.cookie('refreshToken', '', {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    secure: isProduction,
+    sameSite: isProduction ? 'strict' : 'lax',
     expires: new Date(0),
   });
 };
