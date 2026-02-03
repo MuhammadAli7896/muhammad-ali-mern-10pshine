@@ -1,0 +1,7 @@
+on:
+  push:
+    branches:
+      - main
+      - develop  # Add this line
+  pull_request:
+    types: [opened, synchronize, reopened]
