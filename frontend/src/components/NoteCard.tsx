@@ -2,11 +2,11 @@ import type { Note } from '../lib/notesApi';
 import { Pin, Archive, Trash2, Edit, ArchiveRestore } from 'lucide-react';
 
 interface NoteCardProps {
-  note: Note;
-  onEdit: (note: Note) => void;
-  onDelete: (id: string) => void;
-  onTogglePin: (id: string) => void;
-  onToggleArchive: (id: string) => void;
+  readonly note: Note;
+  readonly onEdit: (note: Note) => void;
+  readonly onDelete: (id: string) => void;
+  readonly onTogglePin: (id: string) => void;
+  readonly onToggleArchive: (id: string) => void;
 }
 
 export default function NoteCard({
@@ -41,17 +41,18 @@ export default function NoteCard({
         <h3 className="text-lg font-semibold text-white mb-2 pr-6 drop-shadow-md">
           {note.title}
         </h3>
-        <p className="text-white/90 text-sm whitespace-pre-wrap line-clamp-6">
-          {note.content}
-        </p>
+        <div 
+          className="text-white/90 text-sm line-clamp-6 prose prose-sm prose-invert max-w-none *:text-white/90 [&_strong]:text-white [&_em]:text-white/90 [&_code]:text-white/80 [&_h1]:text-white [&_h2]:text-white [&_h3]:text-white [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:ml-0 [&_li>ul]:mt-1 [&_li>ol]:mt-1 [&_blockquote]:border-l-4 [&_blockquote]:border-white/40 [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:text-white/80 [&_pre]:bg-black/30 [&_pre]:p-2 [&_pre]:rounded [&_pre]:overflow-x-auto [&_pre]:text-white/90 [&_pre_code]:bg-transparent"
+          dangerouslySetInnerHTML={{ __html: note.content }}
+        />
       </div>
 
       {/* Tags */}
       {note.tags.length > 0 && (
         <div className="flex flex-wrap gap-1 mb-3">
-          {note.tags.map((tag, index) => (
+          {note.tags.map((tag) => (
             <span
-              key={index}
+              key={tag}
               className="px-2 py-1 text-xs font-medium bg-white/20 backdrop-blur-sm rounded-full text-white"
             >
               #{tag}

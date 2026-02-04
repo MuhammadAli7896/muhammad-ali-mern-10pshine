@@ -155,7 +155,6 @@ describe('Login Component', () => {
   });
 
   it('navigates to signup page when clicking signup link', async () => {
-    const user = userEvent.setup();
     render(<Login />);
     
     const signupLink = screen.getByText(/sign up/i);

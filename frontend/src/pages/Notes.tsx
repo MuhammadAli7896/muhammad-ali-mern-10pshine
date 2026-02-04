@@ -106,14 +106,24 @@ export default function Notes() {
   const handleSaveNote = async (data: NoteFormData) => {
     try {
       if (editingNote) {
-        await notesApi.updateNote(editingNote._id, data);
+        const updatedNote = await notesApi.updateNote(editingNote._id, data);
+        
+        // Optimistically update the note in state
+        setNotes(prevNotes => prevNotes.map(note => 
+          note._id === editingNote._id ? updatedNote : note
+        ));
+        
         toast.success('Note updated successfully');
+        loadStats(); // Only reload stats
       } else {
-        await notesApi.createNote(data);
+        const newNote = await notesApi.createNote(data);
+        
+        // Optimistically add the new note to state
+        setNotes(prevNotes => [newNote, ...prevNotes]);
+        
         toast.success('Note created successfully');
+        loadStats(); // Only reload stats
       }
-      loadNotes();
-      loadStats();
       setIsModalOpen(false);
       setEditingNote(null);
     } catch (error: any) {
