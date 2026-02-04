@@ -400,5 +400,4 @@ Think Nest Team
 module.exports = {
   sendResetPasswordEmail,
   sendPasswordChangeEmail,
-  sendResetPasswordEmail,
 };
