@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { X, Tag } from 'lucide-react';
 import type { Note } from '../lib/notesApi';
+import RichTextEditor from './RichTextEditor';
 
 interface AddEditNoteModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSave: (data: NoteFormData) => Promise<void>;
-  note?: Note | null;
+  readonly isOpen: boolean;
+  readonly onClose: () => void;
+  readonly onSave: (data: NoteFormData) => Promise<void>;
+  readonly note?: Note | null;
 }
 
 export interface NoteFormData {
@@ -114,7 +115,7 @@ export default function AddEditNoteModal({
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 pt-8 space-y-4">{/* Title */}
+        <form onSubmit={handleSubmit} className="p-6 pt-8 space-y-4">
           {/* Title */}
           <div>
             <input
@@ -133,13 +134,10 @@ export default function AddEditNoteModal({
 
           {/* Content */}
           <div>
-            <textarea
+            <RichTextEditor
+              content={formData.content}
+              onChange={(content) => setFormData({ ...formData, content })}
               placeholder="Start typing your note..."
-              value={formData.content}
-              onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-              className="w-full px-4 py-3 bg-white/90 backdrop-blur-sm border border-white/30 rounded-lg focus:ring-2 focus:ring-white/50 focus:border-transparent text-gray-900 placeholder-gray-600 resize-none"
-              rows={8}
-              required
             />
           </div>
 
@@ -155,7 +153,7 @@ export default function AddEditNoteModal({
                 placeholder="Add a tag"
                 value={tagInput}
                 onChange={(e) => setTagInput(e.target.value)}
-                onKeyPress={(e) => {
+                onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault();
                     handleAddTag();
@@ -194,9 +192,9 @@ export default function AddEditNoteModal({
 
           {/* Color picker */}
           <div>
-            <label className="block text-sm font-medium text-white drop-shadow-md mb-2">
+            <div className="block text-sm font-medium text-white drop-shadow-md mb-2">
               Color
-            </label>
+            </div>
             <div className="flex flex-wrap gap-2">
               {COLORS.map((color) => (
                 <button
@@ -229,7 +227,11 @@ export default function AddEditNoteModal({
               disabled={isSubmitting || !formData.title.trim() || !formData.content.trim()}
               className="flex-1 px-4 py-3 bg-white/30 backdrop-blur-sm text-white rounded-lg hover:bg-white/40 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium"
             >
-              {isSubmitting ? 'Saving...' : note ? 'Update Note' : 'Create Note'}
+              {(() => {
+                if (isSubmitting) return 'Saving...';
+                if (note) return 'Update Note';
+                return 'Create Note';
+              })()}
             </button>
           </div>
         </form>
