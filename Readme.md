@@ -2,8 +2,21 @@
 
 A full-stack notes management application built with MongoDB, Express.js, React, and Node.js (MERN stack). This application provides a comprehensive platform for creating, organizing, and managing notes with rich text editing capabilities, user authentication, and advanced search functionality.
 
+## Live Demo
+
+**Application**: [https://think-nest.netlify.app](https://think-nest.netlify.app)  
+**API Endpoint**: [https://thinknest-backend.vercel.app/api](https://thinknest-backend.vercel.app/api)
+
+The application is deployed and ready to use:
+- Frontend hosted on Netlify
+- Backend hosted on Vercel
+- Database hosted on MongoDB Atlas
+
+For detailed deployment information, see [DEPLOYMENT.md](./DEPLOYMENT.md)
+
 ## Table of Contents
 
+- [Live Demo](#live-demo)
 - [Features](#features)
 - [Tech Stack](#tech-stack)
 - [Prerequisites](#prerequisites)
@@ -11,6 +24,7 @@ A full-stack notes management application built with MongoDB, Express.js, React,
 - [Configuration](#configuration)
 - [Running the Application](#running-the-application)
 - [Testing](#testing)
+- [Deployment](#deployment)
 - [Project Structure](#project-structure)
 - [API Documentation](#api-documentation)
 - [Development Workflow](#development-workflow)
@@ -274,6 +288,68 @@ npm run test:watch
 - Notes CRUD operations
 - Authorization middleware
 - Database operations
+
+## Deployment
+
+The application is deployed using:
+- **Frontend**: Netlify (https://think-nest.netlify.app)
+- **Backend**: Vercel (https://thinknest-backend.vercel.app)
+- **Database**: MongoDB Atlas
+
+### Quick Deploy
+
+#### Prerequisites
+- Netlify CLI installed: `npm install -g netlify-cli`
+- Vercel CLI installed: `npm install -g vercel`
+- Netlify account
+- Vercel account
+- MongoDB Atlas account (or MongoDB instance)
+
+#### Deploy Backend to Vercel
+
+```bash
+cd backend
+
+# Create vercel.json (already included in this repo)
+
+# Deploy
+vercel --prod
+
+# Add environment variables
+vercel env add MONGODB_URI production
+vercel env add JWT_ACCESS_SECRET production
+vercel env add JWT_REFRESH_SECRET production
+vercel env add EMAIL_USER production
+vercel env add EMAIL_PASS production
+vercel env add CLIENT_URL production
+
+# Redeploy with environment variables
+vercel --prod
+```
+
+#### Deploy Frontend to Netlify
+
+```bash
+cd frontend
+
+# Create .env.production with your Vercel backend URL
+echo "VITE_API_URL=https://your-backend.vercel.app/api" > .env.production
+
+# Build
+npm run build
+
+# Deploy
+netlify deploy --prod
+```
+
+### Deployment Configuration Files
+
+The repository includes:
+- `backend/vercel.json` - Vercel configuration for Express.js
+- `frontend/netlify.toml` - Netlify build configuration
+- `frontend/.env.production` - Production API endpoint
+
+For detailed deployment instructions, troubleshooting, and monitoring, see [DEPLOYMENT.md](./DEPLOYMENT.md)
 
 ## Project Structure
 

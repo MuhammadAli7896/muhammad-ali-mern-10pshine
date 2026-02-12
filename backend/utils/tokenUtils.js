@@ -99,19 +99,22 @@ const setAuthCookies = (res, accessToken, refreshToken) => {
   const isProduction = process.env.NODE_ENV === 'production';
   
   // Access token cookie - httpOnly, secure in production
+  // IMPORTANT: sameSite must be 'none' in production for cross-domain (Netlify -> Vercel)
   res.cookie('accessToken', accessToken, {
     httpOnly: true,
-    secure: isProduction,
-    sameSite: isProduction ? 'strict' : 'lax', // Use 'lax' in development
+    secure: isProduction, // Must be true when sameSite is 'none'
+    sameSite: isProduction ? 'none' : 'lax', // 'none' allows cross-site cookies with secure flag
     maxAge: 15 * 60 * 1000, // 15 minutes
+    path: '/',
   });
 
   // Refresh token cookie - httpOnly, secure in production
   res.cookie('refreshToken', refreshToken, {
     httpOnly: true,
     secure: isProduction,
-    sameSite: isProduction ? 'strict' : 'lax', // Use 'lax' in development
+    sameSite: isProduction ? 'none' : 'lax',
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    path: '/',
   });
 };
 
@@ -125,15 +128,17 @@ const clearAuthCookies = (res) => {
   res.cookie('accessToken', '', {
     httpOnly: true,
     secure: isProduction,
-    sameSite: isProduction ? 'strict' : 'lax',
+    sameSite: isProduction ? 'none' : 'lax',
     expires: new Date(0),
+    path: '/',
   });
 
   res.cookie('refreshToken', '', {
     httpOnly: true,
     secure: isProduction,
-    sameSite: isProduction ? 'strict' : 'lax',
+    sameSite: isProduction ? 'none' : 'lax',
     expires: new Date(0),
+    path: '/',
   });
 };
 
