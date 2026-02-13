@@ -250,6 +250,7 @@ const changePassword = asyncHandler(async (req, res) => {
 
   // Update password
   user.password = newPassword;
+  user.markModified('password'); // Explicitly mark password as modified to ensure pre-save hook runs
   await user.save();
 
   // Clear all refresh tokens (logout from all devices)
@@ -383,6 +384,7 @@ const resetPassword = asyncHandler(async (req, res) => {
 
   // Update password
   user.password = newPassword;
+  user.markModified('password'); // Explicitly mark password as modified to ensure pre-save hook runs
   user.resetPasswordToken = undefined;
   user.resetPasswordExpire = undefined;
   user.refreshToken = undefined; // Clear refresh tokens (logout from all devices)
@@ -521,6 +523,7 @@ const verifyPasswordChange = asyncHandler(async (req, res) => {
 
   // Update password with the pending hashed password
   user.password = user.pendingPassword;
+  user.markModified('password'); // Mark as modified so Mongoose saves it (pre-save hook will detect it's already hashed)
   user.passwordChangeToken = undefined;
   user.passwordChangeExpire = undefined;
   user.pendingPassword = undefined;
@@ -531,7 +534,7 @@ const verifyPasswordChange = asyncHandler(async (req, res) => {
   // Hash and save new refresh token
   user.refreshToken = hashToken(refreshToken);
   
-  // Skip password hashing since pendingPassword is already hashed
+  // Save (pre-save hook will skip hashing since password is already in bcrypt format)
   await user.save({ validateBeforeSave: false });
 
   // Set new auth cookies
