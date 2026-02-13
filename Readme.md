@@ -12,11 +12,8 @@ The application is deployed and ready to use:
 - Backend hosted on Vercel
 - Database hosted on MongoDB Atlas
 
-For detailed deployment information, see [DEPLOYMENT.md](./DEPLOYMENT.md)
-
 ## Table of Contents
 
-- [Live Demo](#live-demo)
 - [Features](#features)
 - [Tech Stack](#tech-stack)
 - [Prerequisites](#prerequisites)
