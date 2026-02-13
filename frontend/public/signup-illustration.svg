@@ -1,0 +1,46 @@
+<svg width="400" height="400" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background Circle -->
+  <circle cx="200" cy="200" r="180" fill="url(#signupGradient)" opacity="0.1"/>
+  
+  <!-- Main Notepad -->
+  <rect x="100" y="120" width="140" height="180" rx="8" fill="white" stroke="#7C3AED" stroke-width="3"/>
+  <rect x="100" y="120" width="140" height="30" rx="8" fill="#7C3AED"/>
+  
+  <!-- Spiral Binding -->
+  <circle cx="120" cy="135" r="4" fill="white"/>
+  <circle cx="145" cy="135" r="4" fill="white"/>
+  <circle cx="170" cy="135" r="4" fill="white"/>
+  <circle cx="195" cy="135" r="4" fill="white"/>
+  <circle cx="220" cy="135" r="4" fill="white"/>
+  
+  <!-- Notes Lines on main pad -->
+  <line x1="120" y1="170" x2="220" y2="170" stroke="#A78BFA" stroke-width="2" stroke-linecap="round"/>
+  <line x1="120" y1="190" x2="200" y2="190" stroke="#C4B5FD" stroke-width="2" stroke-linecap="round"/>
+  <line x1="120" y1="210" x2="210" y2="210" stroke="#A78BFA" stroke-width="2" stroke-linecap="round"/>
+  <line x1="120" y1="230" x2="195" y2="230" stroke="#C4B5FD" stroke-width="2" stroke-linecap="round"/>
+  <line x1="120" y1="250" x2="205" y2="250" stroke="#A78BFA" stroke-width="2" stroke-linecap="round"/>
+  <line x1="120" y1="270" x2="190" y2="270" stroke="#C4B5FD" stroke-width="2" stroke-linecap="round"/>
+  
+  <!-- Floating Note (Right) -->
+  <rect x="210" y="90" width="90" height="110" rx="6" fill="white" stroke="#6366F1" stroke-width="2.5"/>
+  <line x1="225" y1="110" x2="285" y2="110" stroke="#818CF8" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="225" y1="125" x2="275" y2="125" stroke="#A5B4FC" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="225" y1="140" x2="280" y2="140" stroke="#818CF8" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="225" y1="155" x2="270" y2="155" stroke="#A5B4FC" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="225" y1="170" x2="278" y2="170" stroke="#818CF8" stroke-width="1.5" stroke-linecap="round"/>
+  
+  <!-- Plus Icon (Creating new) -->
+  <circle cx="260" cy="260" r="30" fill="#4F46E5"/>
+  <line x1="260" y1="245" x2="260" y2="275" stroke="white" stroke-width="4" stroke-linecap="round"/>
+  <line x1="245" y1="260" x2="275" y2="260" stroke="white" stroke-width="4" stroke-linecap="round"/>
+  
+  <!-- Start Journey Text -->
+  <text x="200" y="340" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#7C3AED" text-anchor="middle">Start Your Journey</text>
+  
+  <defs>
+    <linearGradient id="signupGradient" x1="0" y1="0" x2="400" y2="400">
+      <stop offset="0%" stop-color="#6366F1"/>
+      <stop offset="100%" stop-color="#A855F7"/>
+    </linearGradient>
+  </defs>
+</svg>
